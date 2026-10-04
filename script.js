@@ -2,13 +2,7 @@ const TMDB_BASE_URL = "https://api.themoviedb.org/3";
 const TMDB_IMAGE_URL = "https://image.tmdb.org/t/p/w500";
 const TMDB_BACKDROP_URL = "https://image.tmdb.org/t/p/original";
 
-/*
-Paste your TMDB API Read Access Token below.
-
-Example:
-const TMDB_TOKEN = "YOUR_TOKEN_HERE";
-*/
-
+/* Paste your TMDB API Read Access Token here */
 const TMDB_TOKEN = "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJkODMxMTM1NTY2ZDc1MDRjYmI1ZTFmZTI5N2EwNTZmZSIsIm5iZiI6MTc5MTEzMjk5Mi45MjYsInN1YiI6IjZhYzI4NTQwYWJhNWQ2ODg0ODAzYzA3MCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.2pUu9IJDZOJlCTKxxNB0fiUtj0ZvMUJTSZdzq32KZnQ";
 
 const tmdbOptions = {
@@ -19,10 +13,7 @@ const tmdbOptions = {
   }
 };
 
-
-/* =========================
-   HTML ELEMENTS
-========================= */
+/* HTML ELEMENTS */
 
 const trendingGrid = document.getElementById("trendingGrid");
 const tvGrid = document.getElementById("tvGrid");
@@ -34,6 +25,9 @@ const searchResultsSection = document.getElementById("searchResultsSection");
 const searchEmptyState = document.getElementById("searchEmptyState");
 const trendingSection = document.getElementById("trendingSection");
 const clearSearchBtn = document.getElementById("clearSearchBtn");
+
+const trendingViewAllBtn = document.getElementById("trendingViewAllBtn");
+const tvViewAllBtn = document.getElementById("tvViewAllBtn");
 
 const detailsModal = document.getElementById("detailsModal");
 const modalClose = document.getElementById("modalClose");
@@ -75,35 +69,27 @@ const sortFilter = document.getElementById("sortFilter");
 const mobileMenuBtn = document.getElementById("mobileMenuBtn");
 const mobileMenu = document.getElementById("mobileMenu");
 
-
-/* =========================
-   APP DATA
-========================= */
+/* APP DATA */
 
 let trendingMovies = [];
 let popularTVShows = [];
 let allTitles = [];
+let currentSearchResults = [];
 
 let selectedTitle = null;
-
 let activeWatchlistTab = "wantToWatch";
-
-let watchlist =
-  JSON.parse(
-    localStorage.getItem("cinevaultWatchlist")
-  ) || [];
-
-let completed =
-  JSON.parse(
-    localStorage.getItem("cinevaultCompleted")
-  ) || [];
-
 let searchTimeout;
 
+let trendingShowingAll = false;
+let tvShowingAll = false;
 
-/* =========================
-   TMDB FETCH FUNCTION
-========================= */
+let watchlist =
+  JSON.parse(localStorage.getItem("cinevaultWatchlist")) || [];
+
+let completed =
+  JSON.parse(localStorage.getItem("cinevaultCompleted")) || [];
+
+/* TMDB API */
 
 async function fetchFromTMDB(endpoint) {
   try {
@@ -114,7 +100,7 @@ async function fetchFromTMDB(endpoint) {
 
     if (!response.ok) {
       throw new Error(
-        `TMDB request failed with status ${response.status}`
+        `TMDB request failed: ${response.status}`
       );
     }
 
@@ -125,10 +111,7 @@ async function fetchFromTMDB(endpoint) {
   }
 }
 
-
-/* =========================
-   FORMAT TMDB DATA
-========================= */
+/* FORMAT TMDB DATA */
 
 function formatTMDBItem(item, type = null) {
   const mediaType =
@@ -155,62 +138,46 @@ function formatTMDBItem(item, type = null) {
     id: item.id,
     title: title || "Untitled",
     type: mediaType,
-    year: year,
-
+    year,
     rating:
       typeof item.vote_average === "number"
         ? item.vote_average.toFixed(1)
         : "N/A",
-
     genre: "",
     genres: [],
-
     runtime: "",
     director: "",
-
-    releaseDate:
-      releaseDate || "Not available",
-
+    releaseDate: releaseDate || "Not available",
     description:
       item.overview ||
       "No description available.",
-
     poster:
       item.poster_path
         ? `${TMDB_IMAGE_URL}${item.poster_path}`
         : "",
-
     backdrop:
       item.backdrop_path
         ? `${TMDB_BACKDROP_URL}${item.backdrop_path}`
         : "",
-
     addedAt: Date.now()
   };
 }
 
-
-/* =========================
-   LOAD TRENDING MOVIES
-========================= */
+/* LOAD TRENDING */
 
 async function loadTrending() {
   const data = await fetchFromTMDB(
     "/trending/movie/week?language=en-US"
   );
 
-  if (!data || !data.results) {
-    return;
-  }
+  if (!data || !data.results) return;
 
-  trendingMovies = data.results
-    .slice(0, 10)
-    .map(item =>
-      formatTMDBItem(item, "movie")
-    );
+  trendingMovies = data.results.map(item =>
+    formatTMDBItem(item, "movie")
+  );
 
   renderMovieGrid(
-    trendingMovies,
+    trendingMovies.slice(0, 5),
     trendingGrid
   );
 
@@ -221,34 +188,26 @@ async function loadTrending() {
   }
 }
 
-
-/* =========================
-   LOAD POPULAR TV SHOWS
-========================= */
+/* LOAD POPULAR TV */
 
 async function loadPopularTV() {
   const data = await fetchFromTMDB(
     "/tv/popular?language=en-US&page=1"
   );
 
-  if (!data || !data.results) {
-    return;
-  }
+  if (!data || !data.results) return;
 
-  popularTVShows = data.results
-    .slice(0, 10)
-    .map(item =>
-      formatTMDBItem(item, "tv")
-    );
+  popularTVShows = data.results.map(item =>
+    formatTMDBItem(item, "tv")
+  );
 
   renderMovieGrid(
-    popularTVShows,
+    popularTVShows.slice(0, 5),
     tvGrid
   );
 
   updateAllTitles();
 }
-
 
 function updateAllTitles() {
   allTitles = [
@@ -257,39 +216,26 @@ function updateAllTitles() {
   ];
 }
 
-
-/* =========================
-   HERO
-========================= */
+/* HERO */
 
 function setHero(item) {
   if (!item) return;
 
   selectedTitle = item;
 
-  heroTitle.textContent =
-    item.title;
-
-  heroDescription.textContent =
-    item.description;
-
-  heroRating.textContent =
-    `${item.rating}/10`;
-
-  heroYear.textContent =
-    item.year;
-
+  heroTitle.textContent = item.title;
+  heroDescription.textContent = item.description;
+  heroRating.textContent = `${item.rating}/10`;
+  heroYear.textContent = item.year;
   heroGenre.textContent =
     item.type === "tv"
       ? "TV Show"
       : "Movie";
 
-  heroImage.src =
-    item.backdrop || "";
+  heroImage.src = item.backdrop || "";
 
   updateHeroButton();
 }
-
 
 function updateHeroButton() {
   if (!selectedTitle) return;
@@ -307,20 +253,12 @@ function updateHeroButton() {
       : "<span>+</span> Add to Watchlist";
 }
 
+/* CREATE CARD */
 
-/* =========================
-   CREATE MOVIE CARD
-========================= */
+function createMovieCard(item, watchlistMode = false) {
+  const card = document.createElement("article");
 
-function createMovieCard(
-  item,
-  watchlistMode = false
-) {
-  const card =
-    document.createElement("article");
-
-  card.className =
-    "movie-card";
+  card.className = "movie-card";
 
   const isSaved =
     watchlist.some(
@@ -332,10 +270,7 @@ function createMovieCard(
   let actions = "";
 
   if (watchlistMode) {
-    if (
-      activeWatchlistTab ===
-      "wantToWatch"
-    ) {
+    if (activeWatchlistTab === "wantToWatch") {
       actions = `
         <div class="watchlist-card-actions">
           <button
@@ -445,15 +380,9 @@ function createMovieCard(
   return card;
 }
 
+/* RENDER GRID */
 
-/* =========================
-   RENDER MOVIE GRID
-========================= */
-
-function renderMovieGrid(
-  items,
-  container
-) {
+function renderMovieGrid(items, container) {
   if (!container) return;
 
   container.innerHTML = "";
@@ -465,20 +394,14 @@ function renderMovieGrid(
   });
 }
 
+/* FIND TITLE */
 
-/* =========================
-   FIND TITLE
-========================= */
-
-function findTitleById(
-  id,
-  type = null
-) {
-  const numberId =
-    Number(id);
+function findTitleById(id, type = null) {
+  const numberId = Number(id);
 
   const allAvailableTitles = [
     ...allTitles,
+    ...currentSearchResults,
     ...watchlist,
     ...completed
   ];
@@ -490,10 +413,7 @@ function findTitleById(
   );
 }
 
-
-/* =========================
-   LOCAL STORAGE
-========================= */
+/* LOCAL STORAGE */
 
 function saveLists() {
   localStorage.setItem(
@@ -507,10 +427,7 @@ function saveLists() {
   );
 }
 
-
-/* =========================
-   ADD TO WATCHLIST
-========================= */
+/* WATCHLIST */
 
 function addToWatchlist(item) {
   if (!item) return;
@@ -551,11 +468,6 @@ function addToWatchlist(item) {
   refreshUI();
 }
 
-
-/* =========================
-   MARK COMPLETED
-========================= */
-
 function markCompleted(item) {
   if (!item) return;
 
@@ -585,11 +497,6 @@ function markCompleted(item) {
   saveLists();
   refreshUI();
 }
-
-
-/* =========================
-   WATCH AGAIN
-========================= */
 
 function moveBackToWatchlist(item) {
   if (!item) return;
@@ -621,15 +528,7 @@ function moveBackToWatchlist(item) {
   refreshUI();
 }
 
-
-/* =========================
-   REMOVE COMPLETED
-========================= */
-
-function removeFromCompleted(
-  id,
-  type
-) {
+function removeFromCompleted(id, type) {
   completed =
     completed.filter(
       title =>
@@ -643,37 +542,27 @@ function removeFromCompleted(
   refreshUI();
 }
 
-
-/* =========================
-   RENDER WATCHLIST
-========================= */
+/* RENDER WATCHLIST */
 
 function renderWatchlist() {
   let titles =
-    activeWatchlistTab ===
-    "wantToWatch"
+    activeWatchlistTab === "wantToWatch"
       ? [...watchlist]
       : [...completed];
 
-  const selectedType =
-    typeFilter.value;
+  const selectedType = typeFilter.value;
 
   if (selectedType !== "all") {
     titles =
       titles.filter(
         item =>
-          item.type ===
-          selectedType
+          item.type === selectedType
       );
   }
 
-  const selectedSort =
-    sortFilter.value;
+  const selectedSort = sortFilter.value;
 
-  if (
-    selectedSort ===
-    "rating"
-  ) {
+  if (selectedSort === "rating") {
     titles.sort(
       (a, b) =>
         Number(b.rating) -
@@ -681,10 +570,7 @@ function renderWatchlist() {
     );
   }
 
-  if (
-    selectedSort ===
-    "title"
-  ) {
+  if (selectedSort === "title") {
     titles.sort(
       (a, b) =>
         a.title.localeCompare(
@@ -693,10 +579,7 @@ function renderWatchlist() {
     );
   }
 
-  if (
-    selectedSort ===
-    "recent"
-  ) {
+  if (selectedSort === "recent") {
     titles.sort(
       (a, b) =>
         (b.addedAt || 0) -
@@ -707,21 +590,11 @@ function renderWatchlist() {
   watchlistGrid.innerHTML = "";
 
   if (!titles.length) {
-    watchlistEmpty.classList.remove(
-      "hidden"
-    );
-
-    watchlistGrid.classList.add(
-      "hidden"
-    );
+    watchlistEmpty.classList.remove("hidden");
+    watchlistGrid.classList.add("hidden");
   } else {
-    watchlistEmpty.classList.add(
-      "hidden"
-    );
-
-    watchlistGrid.classList.remove(
-      "hidden"
-    );
+    watchlistEmpty.classList.add("hidden");
+    watchlistGrid.classList.remove("hidden");
 
     titles.forEach(item => {
       watchlistGrid.appendChild(
@@ -733,17 +606,11 @@ function renderWatchlist() {
     });
   }
 
-  wantCount.textContent =
-    watchlist.length;
-
-  completedCount.textContent =
-    completed.length;
+  wantCount.textContent = watchlist.length;
+  completedCount.textContent = completed.length;
 }
 
-
-/* =========================
-   FORMAT RUNTIME
-========================= */
+/* RUNTIME */
 
 function formatRuntime(minutes) {
   if (!minutes) return "";
@@ -761,10 +628,7 @@ function formatRuntime(minutes) {
   return `${hours}h ${remainingMinutes}m`;
 }
 
-
-/* =========================
-   GET FULL DETAILS
-========================= */
+/* FULL DETAILS */
 
 async function getFullDetails(item) {
   if (!item) return null;
@@ -775,28 +639,23 @@ async function getFullDetails(item) {
       : `/movie/${item.id}?language=en-US&append_to_response=credits`;
 
   const data =
-    await fetchFromTMDB(
-      endpoint
-    );
+    await fetchFromTMDB(endpoint);
 
   if (!data) {
     return item;
   }
 
-  let director =
-    "Not available";
+  let director = "Not available";
 
   if (item.type === "movie") {
     const directorData =
       data.credits?.crew?.find(
         person =>
-          person.job ===
-          "Director"
+          person.job === "Director"
       );
 
     if (directorData) {
-      director =
-        directorData.name;
+      director = directorData.name;
     }
   } else {
     if (
@@ -836,38 +695,25 @@ async function getFullDetails(item) {
 
   const year =
     releaseDate
-      ? releaseDate.substring(
-          0,
-          4
-        )
+      ? releaseDate.substring(0, 4)
       : item.year;
 
   return {
     ...item,
-
     title:
       data.title ||
       data.name ||
       item.title,
-
     year,
-
     rating:
-      typeof data.vote_average ===
-      "number"
-        ? data.vote_average.toFixed(
-            1
-          )
+      typeof data.vote_average === "number"
+        ? data.vote_average.toFixed(1)
         : item.rating,
-
     description:
       data.overview ||
       item.description,
-
     runtime,
-
     director,
-
     genres:
       data.genres
         ? data.genres.map(
@@ -875,21 +721,17 @@ async function getFullDetails(item) {
               genre.name
           )
         : [],
-
     genre:
       data.genres?.[0]?.name ||
       item.genre ||
       "",
-
     releaseDate:
       releaseDate ||
       "Not available",
-
     poster:
       data.poster_path
         ? `${TMDB_IMAGE_URL}${data.poster_path}`
         : item.poster,
-
     backdrop:
       data.backdrop_path
         ? `${TMDB_BACKDROP_URL}${data.backdrop_path}`
@@ -897,10 +739,7 @@ async function getFullDetails(item) {
   };
 }
 
-
-/* =========================
-   OPEN DETAILS MODAL
-========================= */
+/* DETAILS MODAL */
 
 async function openDetails(item) {
   if (!item) return;
@@ -920,8 +759,7 @@ async function openDetails(item) {
     selectedTitle.year;
 
   modalRuntime.textContent =
-    selectedTitle.runtime ||
-    "";
+    selectedTitle.runtime || "";
 
   modalDescription.textContent =
     selectedTitle.description ||
@@ -941,12 +779,10 @@ async function openDetails(item) {
       : "MOVIE";
 
   modalPoster.src =
-    selectedTitle.poster ||
-    "";
+    selectedTitle.poster || "";
 
   modalBackdrop.src =
-    selectedTitle.backdrop ||
-    "";
+    selectedTitle.backdrop || "";
 
   modalPoster.alt =
     selectedTitle.title;
@@ -963,12 +799,9 @@ async function openDetails(item) {
     selectedTitle.genres.forEach(
       genre => {
         const span =
-          document.createElement(
-            "span"
-          );
+          document.createElement("span");
 
-        span.textContent =
-          genre;
+        span.textContent = genre;
 
         modalGenres.appendChild(
           span
@@ -979,34 +812,14 @@ async function openDetails(item) {
 
   updateModalButtons();
 
-  detailsModal.classList.add(
-    "active"
-  );
-
-  document.body.classList.add(
-    "modal-open"
-  );
+  detailsModal.classList.add("active");
+  document.body.classList.add("modal-open");
 }
-
-
-/* =========================
-   CLOSE MODAL
-========================= */
 
 function closeModal() {
-  detailsModal.classList.remove(
-    "active"
-  );
-
-  document.body.classList.remove(
-    "modal-open"
-  );
+  detailsModal.classList.remove("active");
+  document.body.classList.remove("modal-open");
 }
-
-
-/* =========================
-   UPDATE MODAL BUTTONS
-========================= */
 
 function updateModalButtons() {
   if (!selectedTitle) return;
@@ -1014,19 +827,15 @@ function updateModalButtons() {
   const inWatchlist =
     watchlist.some(
       item =>
-        item.id ===
-          selectedTitle.id &&
-        item.type ===
-          selectedTitle.type
+        item.id === selectedTitle.id &&
+        item.type === selectedTitle.type
     );
 
   const isCompleted =
     completed.some(
       item =>
-        item.id ===
-          selectedTitle.id &&
-        item.type ===
-          selectedTitle.type
+        item.id === selectedTitle.id &&
+        item.type === selectedTitle.type
     );
 
   modalWatchlistBtn.textContent =
@@ -1040,10 +849,7 @@ function updateModalButtons() {
       : "Mark Completed";
 }
 
-
-/* =========================
-   SEARCH TMDB
-========================= */
+/* SEARCH */
 
 async function handleSearch() {
   const query =
@@ -1054,135 +860,170 @@ async function handleSearch() {
     return;
   }
 
-  const data =
-    await fetchFromTMDB(
-      `/search/multi?query=${encodeURIComponent(
-        query
-      )}&include_adult=false&language=en-US&page=1`
-    );
-
-  searchResultsSection.classList.remove(
-    "hidden"
-  );
-
-  trendingSection.classList.add(
-    "hidden"
-  );
-
-  if (
-    !data ||
-    !data.results
-  ) {
-    showNoSearchResults();
-    return;
-  }
-
-  const results =
-    data.results
-      .filter(
-        item =>
-          item.media_type ===
-            "movie" ||
-          item.media_type ===
-            "tv"
-      )
-      .map(item =>
-        formatTMDBItem(
-          item,
-          item.media_type
-        )
+  try {
+    const data =
+      await fetchFromTMDB(
+        `/search/multi?query=${encodeURIComponent(query)}&include_adult=false&language=en-US&page=1`
       );
 
-  searchResults.innerHTML =
-    "";
+    searchResultsSection.classList.remove("hidden");
+    trendingSection.classList.add("hidden");
 
-  if (!results.length) {
-    showNoSearchResults();
-    return;
-  }
+    searchResults.innerHTML = "";
 
-  searchResults.classList.remove(
-    "hidden"
-  );
+    if (
+      !data ||
+      !data.results
+    ) {
+      showNoSearchResults();
+      return;
+    }
 
-  searchEmptyState.classList.add(
-    "hidden"
-  );
+    currentSearchResults =
+      data.results
+        .filter(
+          item =>
+            item.media_type === "movie" ||
+            item.media_type === "tv"
+        )
+        .map(
+          item =>
+            formatTMDBItem(
+              item,
+              item.media_type
+            )
+        );
 
-  results.forEach(item => {
-    searchResults.appendChild(
-      createMovieCard(item)
+    if (!currentSearchResults.length) {
+      showNoSearchResults();
+      return;
+    }
+
+    searchResults.classList.remove("hidden");
+    searchEmptyState.classList.add("hidden");
+
+    currentSearchResults.forEach(
+      item => {
+        searchResults.appendChild(
+          createMovieCard(item)
+        );
+      }
     );
-  });
-}
 
+  } catch (error) {
+    console.error(
+      "Search error:",
+      error
+    );
+
+    showNoSearchResults();
+  }
+}
 
 function showNoSearchResults() {
-  searchResults.innerHTML =
-    "";
+  searchResults.innerHTML = "";
 
-  searchResults.classList.add(
-    "hidden"
-  );
+  searchResults.classList.add("hidden");
 
-  searchEmptyState.classList.remove(
-    "hidden"
-  );
+  searchEmptyState.classList.remove("hidden");
 }
-
 
 function clearSearch() {
   searchInput.value = "";
 
-  searchResultsSection.classList.add(
-    "hidden"
-  );
+  currentSearchResults = [];
 
-  trendingSection.classList.remove(
-    "hidden"
-  );
+  searchResults.innerHTML = "";
 
-  searchResults.innerHTML =
-    "";
-
-  searchEmptyState.classList.add(
-    "hidden"
-  );
+  searchResultsSection.classList.add("hidden");
+  searchEmptyState.classList.add("hidden");
+  trendingSection.classList.remove("hidden");
 }
 
+/* VIEW ALL / VIEW LESS */
 
-/* =========================
-   REFRESH UI
-========================= */
+trendingViewAllBtn.addEventListener(
+  "click",
+  function() {
+
+    trendingShowingAll =
+      !trendingShowingAll;
+
+    if (trendingShowingAll) {
+      renderMovieGrid(
+        trendingMovies,
+        trendingGrid
+      );
+
+      trendingViewAllBtn.innerHTML =
+        `View Less <span>←</span>`;
+    } else {
+      renderMovieGrid(
+        trendingMovies.slice(0, 5),
+        trendingGrid
+      );
+
+      trendingViewAllBtn.innerHTML =
+        `View All <span>→</span>`;
+    }
+  }
+);
+
+tvViewAllBtn.addEventListener(
+  "click",
+  function() {
+
+    tvShowingAll =
+      !tvShowingAll;
+
+    if (tvShowingAll) {
+      renderMovieGrid(
+        popularTVShows,
+        tvGrid
+      );
+
+      tvViewAllBtn.innerHTML =
+        `View Less <span>←</span>`;
+    } else {
+      renderMovieGrid(
+        popularTVShows.slice(0, 5),
+        tvGrid
+      );
+
+      tvViewAllBtn.innerHTML =
+        `View All <span>→</span>`;
+    }
+  }
+);
+
+/* REFRESH UI */
 
 function refreshUI() {
   renderMovieGrid(
-    trendingMovies,
+    trendingShowingAll
+      ? trendingMovies
+      : trendingMovies.slice(0, 5),
     trendingGrid
   );
 
   renderMovieGrid(
-    popularTVShows,
+    tvShowingAll
+      ? popularTVShows
+      : popularTVShows.slice(0, 5),
     tvGrid
   );
 
   renderWatchlist();
-
   updateHeroButton();
 
   if (
-    detailsModal.classList.contains(
-      "active"
-    )
+    detailsModal.classList.contains("active")
   ) {
     updateModalButtons();
   }
 }
 
-
-/* =========================
-   GENERAL CLICK EVENTS
-========================= */
+/* GENERAL CLICK EVENTS */
 
 document.addEventListener(
   "click",
@@ -1207,7 +1048,6 @@ document.addEventListener(
       return;
     }
 
-
     const detailsTarget =
       event.target.closest(
         "[data-details-id]"
@@ -1225,7 +1065,6 @@ document.addEventListener(
       return;
     }
 
-
     const completeButton =
       event.target.closest(
         "[data-complete-id]"
@@ -1242,7 +1081,6 @@ document.addEventListener(
 
       return;
     }
-
 
     const removeButton =
       event.target.closest(
@@ -1273,7 +1111,6 @@ document.addEventListener(
       return;
     }
 
-
     const moveBackButton =
       event.target.closest(
         "[data-move-back-id]"
@@ -1286,22 +1123,17 @@ document.addEventListener(
           moveBackButton.dataset.moveBackType
         );
 
-      moveBackToWatchlist(
-        item
-      );
+      moveBackToWatchlist(item);
 
       return;
     }
-
 
     const removeCompletedButton =
       event.target.closest(
         "[data-remove-completed-id]"
       );
 
-    if (
-      removeCompletedButton
-    ) {
+    if (removeCompletedButton) {
       removeFromCompleted(
         removeCompletedButton.dataset.removeCompletedId,
         removeCompletedButton.dataset.removeCompletedType
@@ -1312,15 +1144,10 @@ document.addEventListener(
   }
 );
 
-
-/* =========================
-   WATCHLIST TABS
-========================= */
+/* WATCHLIST TABS */
 
 document
-  .querySelectorAll(
-    ".watchlist-tab"
-  )
+  .querySelectorAll(".watchlist-tab")
   .forEach(tab => {
 
     tab.addEventListener(
@@ -1328,18 +1155,12 @@ document
       function() {
 
         document
-          .querySelectorAll(
-            ".watchlist-tab"
-          )
+          .querySelectorAll(".watchlist-tab")
           .forEach(item =>
-            item.classList.remove(
-              "active"
-            )
+            item.classList.remove("active")
           );
 
-        this.classList.add(
-          "active"
-        );
+        this.classList.add("active");
 
         activeWatchlistTab =
           this.dataset.tab;
@@ -1349,10 +1170,7 @@ document
     );
   });
 
-
-/* =========================
-   COMPLETED NAVIGATION
-========================= */
+/* COMPLETED NAV */
 
 document
   .querySelectorAll(
@@ -1368,15 +1186,12 @@ document
           "completed";
 
         document
-          .querySelectorAll(
-            ".watchlist-tab"
-          )
+          .querySelectorAll(".watchlist-tab")
           .forEach(tab => {
 
             tab.classList.toggle(
               "active",
-              tab.dataset.tab ===
-                "completed"
+              tab.dataset.tab === "completed"
             );
           });
 
@@ -1385,10 +1200,7 @@ document
     );
   });
 
-
-/* =========================
-   FILTERS
-========================= */
+/* FILTERS */
 
 typeFilter.addEventListener(
   "change",
@@ -1400,10 +1212,7 @@ sortFilter.addEventListener(
   renderWatchlist
 );
 
-
-/* =========================
-   MODAL EVENTS
-========================= */
+/* MODAL EVENTS */
 
 modalClose.addEventListener(
   "click",
@@ -1415,8 +1224,7 @@ detailsModal.addEventListener(
   function(event) {
 
     if (
-      event.target ===
-      detailsModal
+      event.target === detailsModal
     ) {
       closeModal();
     }
@@ -1427,23 +1235,17 @@ document.addEventListener(
   "keydown",
   function(event) {
 
-    if (
-      event.key ===
-      "Escape"
-    ) {
+    if (event.key === "Escape") {
       closeModal();
     }
   }
 );
 
-
 modalWatchlistBtn.addEventListener(
   "click",
   function() {
 
-    if (!selectedTitle) {
-      return;
-    }
+    if (!selectedTitle) return;
 
     addToWatchlist(
       selectedTitle
@@ -1451,27 +1253,20 @@ modalWatchlistBtn.addEventListener(
   }
 );
 
-
 modalCompleteBtn.addEventListener(
   "click",
   function() {
 
-    if (!selectedTitle) {
-      return;
-    }
+    if (!selectedTitle) return;
 
     const alreadyCompleted =
       completed.some(
         item =>
-          item.id ===
-            selectedTitle.id &&
-          item.type ===
-            selectedTitle.type
+          item.id === selectedTitle.id &&
+          item.type === selectedTitle.type
       );
 
-    if (alreadyCompleted) {
-      return;
-    }
+    if (alreadyCompleted) return;
 
     markCompleted(
       selectedTitle
@@ -1479,18 +1274,13 @@ modalCompleteBtn.addEventListener(
   }
 );
 
-
-/* =========================
-   HERO EVENTS
-========================= */
+/* HERO EVENTS */
 
 heroDetailsBtn.addEventListener(
   "click",
   function() {
 
-    if (!selectedTitle) {
-      return;
-    }
+    if (!selectedTitle) return;
 
     openDetails(
       selectedTitle
@@ -1498,14 +1288,11 @@ heroDetailsBtn.addEventListener(
   }
 );
 
-
 heroWatchlistBtn.addEventListener(
   "click",
   function() {
 
-    if (!selectedTitle) {
-      return;
-    }
+    if (!selectedTitle) return;
 
     addToWatchlist(
       selectedTitle
@@ -1513,10 +1300,7 @@ heroWatchlistBtn.addEventListener(
   }
 );
 
-
-/* =========================
-   SEARCH EVENTS
-========================= */
+/* SEARCH EVENTS */
 
 searchInput.addEventListener(
   "input",
@@ -1529,21 +1313,31 @@ searchInput.addEventListener(
     searchTimeout =
       setTimeout(
         handleSearch,
-        500
+        400
       );
   }
 );
 
+searchInput.addEventListener(
+  "keydown",
+  function(event) {
+
+    if (event.key === "Enter") {
+      clearTimeout(
+        searchTimeout
+      );
+
+      handleSearch();
+    }
+  }
+);
 
 clearSearchBtn.addEventListener(
   "click",
   clearSearch
 );
 
-
-/* =========================
-   MOBILE MENU
-========================= */
+/* MOBILE MENU */
 
 mobileMenuBtn.addEventListener(
   "click",
@@ -1554,7 +1348,6 @@ mobileMenuBtn.addEventListener(
     );
   }
 );
-
 
 mobileMenu
   .querySelectorAll("a")
@@ -1571,10 +1364,7 @@ mobileMenu
     );
   });
 
-
-/* =========================
-   INITIALISE APP
-========================= */
+/* INITIALISE */
 
 async function initialiseApp() {
   renderWatchlist();
@@ -1586,6 +1376,5 @@ async function initialiseApp() {
 
   refreshUI();
 }
-
 
 initialiseApp();
