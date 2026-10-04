@@ -1,3 +1,29 @@
+const TMDB_BASE_URL = "https://api.themoviedb.org/3";
+const TMDB_IMAGE_URL = "https://image.tmdb.org/t/p/w500";
+const TMDB_BACKDROP_URL = "https://image.tmdb.org/t/p/original";
+
+/*
+Paste your TMDB API Read Access Token below.
+
+Example:
+const TMDB_TOKEN = "YOUR_TOKEN_HERE";
+*/
+
+const TMDB_TOKEN = "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJkODMxMTM1NTY2ZDc1MDRjYmI1ZTFmZTI5N2EwNTZmZSIsIm5iZiI6MTc5MTEzMjk5Mi45MjYsInN1YiI6IjZhYzI4NTQwYWJhNWQ2ODg0ODAzYzA3MCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.2pUu9IJDZOJlCTKxxNB0fiUtj0ZvMUJTSZdzq32KZnQ";
+
+const tmdbOptions = {
+  method: "GET",
+  headers: {
+    accept: "application/json",
+    Authorization: `Bearer ${TMDB_TOKEN}`
+  }
+};
+
+
+/* =========================
+   HTML ELEMENTS
+========================= */
+
 const trendingGrid = document.getElementById("trendingGrid");
 const tvGrid = document.getElementById("tvGrid");
 const watchlistGrid = document.getElementById("watchlistGrid");
@@ -31,6 +57,13 @@ const modalCompleteBtn = document.getElementById("modalCompleteBtn");
 const heroWatchlistBtn = document.getElementById("heroWatchlistBtn");
 const heroDetailsBtn = document.getElementById("heroDetailsBtn");
 
+const heroTitle = document.getElementById("heroTitle");
+const heroDescription = document.getElementById("heroDescription");
+const heroRating = document.getElementById("heroRating");
+const heroYear = document.getElementById("heroYear");
+const heroGenre = document.getElementById("heroGenre");
+const heroImage = document.getElementById("heroImage");
+
 const wantCount = document.getElementById("wantCount");
 const completedCount = document.getElementById("completedCount");
 
@@ -43,351 +76,347 @@ const mobileMenuBtn = document.getElementById("mobileMenuBtn");
 const mobileMenu = document.getElementById("mobileMenu");
 
 
-/*
-|--------------------------------------------------------------------------
-| TMDB CONFIGURATION
-|--------------------------------------------------------------------------
-|
-| We will add your TMDB API later.
-|
-| Example:
-|
-| const TMDB_API_KEY = "YOUR_API_KEY";
-| const TMDB_BASE_URL = "https://api.themoviedb.org/3";
-| const TMDB_IMAGE_URL = "https://image.tmdb.org/t/p/w500";
-|
-*/
+/* =========================
+   APP DATA
+========================= */
 
+let trendingMovies = [];
+let popularTVShows = [];
+let allTitles = [];
 
-/*
-|--------------------------------------------------------------------------
-| TEMPORARY DATA
-|--------------------------------------------------------------------------
-|
-| This data is only here so the interface works before the TMDB API
-| is connected.
-|
-| Image fields have intentionally been left empty.
-|
-*/
-
-const trendingMovies = [
-    {
-        id: 1,
-        title: "Beyond the Unknown",
-        type: "movie",
-        year: "2026",
-        rating: 8.7,
-        genre: "Sci-Fi",
-        genres: ["Sci-Fi", "Adventure"],
-        runtime: "2h 10m",
-        director: "Director Name",
-        releaseDate: "March 14, 2026",
-        description:
-            "A gripping story about adventure, mystery, and survival beyond everything humanity has ever known.",
-        poster: "",
-        backdrop: ""
-    },
-
-    {
-        id: 2,
-        title: "Midnight Echo",
-        type: "movie",
-        year: "2025",
-        rating: 8.4,
-        genre: "Thriller",
-        genres: ["Thriller", "Mystery"],
-        runtime: "1h 54m",
-        director: "Director Name",
-        releaseDate: "November 8, 2025",
-        description:
-            "A journalist investigating a forgotten case discovers that the truth may be closer to home than expected.",
-        poster: "",
-        backdrop: ""
-    },
-
-    {
-        id: 3,
-        title: "The Last Horizon",
-        type: "movie",
-        year: "2026",
-        rating: 7.9,
-        genre: "Drama",
-        genres: ["Drama", "Adventure"],
-        runtime: "2h 04m",
-        director: "Director Name",
-        releaseDate: "January 22, 2026",
-        description:
-            "A fractured family embarks on one final journey across an unforgiving landscape.",
-        poster: "",
-        backdrop: ""
-    },
-
-    {
-        id: 4,
-        title: "Silent Territory",
-        type: "movie",
-        year: "2025",
-        rating: 8.8,
-        genre: "Crime",
-        genres: ["Crime", "Thriller"],
-        runtime: "2h 16m",
-        director: "Director Name",
-        releaseDate: "October 3, 2025",
-        description:
-            "Two detectives uncover an underground operation hidden beneath a quiet coastal city.",
-        poster: "",
-        backdrop: ""
-    },
-
-    {
-        id: 5,
-        title: "Parallel",
-        type: "movie",
-        year: "2026",
-        rating: 7.6,
-        genre: "Sci-Fi",
-        genres: ["Sci-Fi", "Mystery"],
-        runtime: "1h 57m",
-        director: "Director Name",
-        releaseDate: "June 17, 2026",
-        description:
-            "A scientist discovers a doorway connecting her world to another version of reality.",
-        poster: "",
-        backdrop: ""
-    }
-];
-
-
-const popularTVShows = [
-    {
-        id: 101,
-        title: "The Divide",
-        type: "tv",
-        year: "2026",
-        rating: 8.2,
-        genre: "Drama",
-        genres: ["Drama", "Mystery"],
-        runtime: "8 Episodes",
-        director: "Creator Name",
-        releaseDate: "February 5, 2026",
-        description:
-            "Two communities separated by a mysterious boundary begin uncovering the truth behind their existence.",
-        poster: "",
-        backdrop: ""
-    },
-
-    {
-        id: 102,
-        title: "After Dark",
-        type: "tv",
-        year: "2025",
-        rating: 8.6,
-        genre: "Crime",
-        genres: ["Crime", "Drama"],
-        runtime: "10 Episodes",
-        director: "Creator Name",
-        releaseDate: "September 11, 2025",
-        description:
-            "A detective navigates the hidden world of a city that changes completely after midnight.",
-        poster: "",
-        backdrop: ""
-    },
-
-    {
-        id: 103,
-        title: "Northbound",
-        type: "tv",
-        year: "2026",
-        rating: 7.8,
-        genre: "Adventure",
-        genres: ["Adventure", "Drama"],
-        runtime: "9 Episodes",
-        director: "Creator Name",
-        releaseDate: "April 19, 2026",
-        description:
-            "A group of strangers travels north following clues to a location that officially does not exist.",
-        poster: "",
-        backdrop: ""
-    },
-
-    {
-        id: 104,
-        title: "Legacy",
-        type: "tv",
-        year: "2025",
-        rating: 9.0,
-        genre: "Drama",
-        genres: ["Drama"],
-        runtime: "12 Episodes",
-        director: "Creator Name",
-        releaseDate: "December 2, 2025",
-        description:
-            "A powerful family fights to preserve an empire while buried secrets threaten everything they built.",
-        poster: "",
-        backdrop: ""
-    },
-
-    {
-        id: 105,
-        title: "Zero Hour",
-        type: "tv",
-        year: "2026",
-        rating: 8.3,
-        genre: "Action",
-        genres: ["Action", "Thriller"],
-        runtime: "8 Episodes",
-        director: "Creator Name",
-        releaseDate: "May 25, 2026",
-        description:
-            "An intelligence team has twelve hours to prevent an attack that could change the world forever.",
-        poster: "",
-        backdrop: ""
-    }
-];
-
-
-const allTitles = [
-    ...trendingMovies,
-    ...popularTVShows
-];
-
-
-/*
-|--------------------------------------------------------------------------
-| WATCHLIST STATE
-|--------------------------------------------------------------------------
-*/
-
-let watchlist = JSON.parse(
-    localStorage.getItem("cinevaultWatchlist")
-) || [];
-
-let completed = JSON.parse(
-    localStorage.getItem("cinevaultCompleted")
-) || [];
+let selectedTitle = null;
 
 let activeWatchlistTab = "wantToWatch";
 
-let selectedTitle = trendingMovies[0];
+let watchlist =
+  JSON.parse(
+    localStorage.getItem("cinevaultWatchlist")
+  ) || [];
+
+let completed =
+  JSON.parse(
+    localStorage.getItem("cinevaultCompleted")
+  ) || [];
+
+let searchTimeout;
 
 
-/*
-|--------------------------------------------------------------------------
-| SAVE LOCAL STORAGE
-|--------------------------------------------------------------------------
-*/
+/* =========================
+   TMDB FETCH FUNCTION
+========================= */
 
-function saveLists() {
-    localStorage.setItem(
-        "cinevaultWatchlist",
-        JSON.stringify(watchlist)
+async function fetchFromTMDB(endpoint) {
+  try {
+    const response = await fetch(
+      `${TMDB_BASE_URL}${endpoint}`,
+      tmdbOptions
     );
 
-    localStorage.setItem(
-        "cinevaultCompleted",
-        JSON.stringify(completed)
-    );
+    if (!response.ok) {
+      throw new Error(
+        `TMDB request failed with status ${response.status}`
+      );
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("TMDB API Error:", error);
+    return null;
+  }
 }
 
 
-/*
-|--------------------------------------------------------------------------
-| CREATE MOVIE CARD
-|--------------------------------------------------------------------------
-*/
+/* =========================
+   FORMAT TMDB DATA
+========================= */
 
-function createMovieCard(item, watchlistMode = false) {
+function formatTMDBItem(item, type = null) {
+  const mediaType =
+    type ||
+    item.media_type ||
+    (item.title ? "movie" : "tv");
 
-    const card = document.createElement("article");
+  const title =
+    mediaType === "movie"
+      ? item.title
+      : item.name;
 
-    card.className = "movie-card";
+  const releaseDate =
+    mediaType === "movie"
+      ? item.release_date
+      : item.first_air_date;
 
-    const isSaved = watchlist.some(
-        savedItem => savedItem.id === item.id
+  const year =
+    releaseDate
+      ? releaseDate.substring(0, 4)
+      : "N/A";
+
+  return {
+    id: item.id,
+    title: title || "Untitled",
+    type: mediaType,
+    year: year,
+
+    rating:
+      typeof item.vote_average === "number"
+        ? item.vote_average.toFixed(1)
+        : "N/A",
+
+    genre: "",
+    genres: [],
+
+    runtime: "",
+    director: "",
+
+    releaseDate:
+      releaseDate || "Not available",
+
+    description:
+      item.overview ||
+      "No description available.",
+
+    poster:
+      item.poster_path
+        ? `${TMDB_IMAGE_URL}${item.poster_path}`
+        : "",
+
+    backdrop:
+      item.backdrop_path
+        ? `${TMDB_BACKDROP_URL}${item.backdrop_path}`
+        : "",
+
+    addedAt: Date.now()
+  };
+}
+
+
+/* =========================
+   LOAD TRENDING MOVIES
+========================= */
+
+async function loadTrending() {
+  const data = await fetchFromTMDB(
+    "/trending/movie/week?language=en-US"
+  );
+
+  if (!data || !data.results) {
+    return;
+  }
+
+  trendingMovies = data.results
+    .slice(0, 10)
+    .map(item =>
+      formatTMDBItem(item, "movie")
     );
 
-    let actions = "";
+  renderMovieGrid(
+    trendingMovies,
+    trendingGrid
+  );
 
-    if (watchlistMode) {
+  updateAllTitles();
 
-        if (activeWatchlistTab === "wantToWatch") {
+  if (trendingMovies.length > 0) {
+    setHero(trendingMovies[0]);
+  }
+}
 
-            actions = `
+
+/* =========================
+   LOAD POPULAR TV SHOWS
+========================= */
+
+async function loadPopularTV() {
+  const data = await fetchFromTMDB(
+    "/tv/popular?language=en-US&page=1"
+  );
+
+  if (!data || !data.results) {
+    return;
+  }
+
+  popularTVShows = data.results
+    .slice(0, 10)
+    .map(item =>
+      formatTMDBItem(item, "tv")
+    );
+
+  renderMovieGrid(
+    popularTVShows,
+    tvGrid
+  );
+
+  updateAllTitles();
+}
+
+
+function updateAllTitles() {
+  allTitles = [
+    ...trendingMovies,
+    ...popularTVShows
+  ];
+}
+
+
+/* =========================
+   HERO
+========================= */
+
+function setHero(item) {
+  if (!item) return;
+
+  selectedTitle = item;
+
+  heroTitle.textContent =
+    item.title;
+
+  heroDescription.textContent =
+    item.description;
+
+  heroRating.textContent =
+    `${item.rating}/10`;
+
+  heroYear.textContent =
+    item.year;
+
+  heroGenre.textContent =
+    item.type === "tv"
+      ? "TV Show"
+      : "Movie";
+
+  heroImage.src =
+    item.backdrop || "";
+
+  updateHeroButton();
+}
+
+
+function updateHeroButton() {
+  if (!selectedTitle) return;
+
+  const heroSaved =
+    watchlist.some(
+      item =>
+        item.id === selectedTitle.id &&
+        item.type === selectedTitle.type
+    );
+
+  heroWatchlistBtn.innerHTML =
+    heroSaved
+      ? "✓ In Watchlist"
+      : "<span>+</span> Add to Watchlist";
+}
+
+
+/* =========================
+   CREATE MOVIE CARD
+========================= */
+
+function createMovieCard(
+  item,
+  watchlistMode = false
+) {
+  const card =
+    document.createElement("article");
+
+  card.className =
+    "movie-card";
+
+  const isSaved =
+    watchlist.some(
+      savedItem =>
+        savedItem.id === item.id &&
+        savedItem.type === item.type
+    );
+
+  let actions = "";
+
+  if (watchlistMode) {
+    if (
+      activeWatchlistTab ===
+      "wantToWatch"
+    ) {
+      actions = `
         <div class="watchlist-card-actions">
-
           <button
             class="complete-card-btn"
             data-complete-id="${item.id}"
+            data-complete-type="${item.type}"
           >
             Mark Complete
           </button>
 
           <button
             data-remove-id="${item.id}"
+            data-remove-type="${item.type}"
           >
             Remove
           </button>
-
         </div>
       `;
-
-        } else {
-
-            actions = `
+    } else {
+      actions = `
         <div class="watchlist-card-actions">
-
           <button
             data-move-back-id="${item.id}"
+            data-move-back-type="${item.type}"
           >
             Watch Again
           </button>
 
           <button
             data-remove-completed-id="${item.id}"
+            data-remove-completed-type="${item.type}"
           >
             Remove
           </button>
-
         </div>
       `;
-
-        }
     }
+  }
 
+  card.innerHTML = `
+    <div
+      class="poster-wrap"
+      data-details-id="${item.id}"
+      data-details-type="${item.type}"
+    >
 
-    card.innerHTML = `
+      ${
+        item.poster
+          ? `
+            <img
+              src="${item.poster}"
+              alt="${item.title}"
+            >
+          `
+          : `
+            <div class="poster-placeholder"></div>
+          `
+      }
 
-    <div class="poster-wrap" data-details-id="${item.id}">
-
-      ${item.poster
-            ? `<img src="${item.poster}" alt="${item.title}">`
-            : `<div class="poster-placeholder"></div>`
-        }
-
-      ${!watchlistMode
-            ? `
+      ${
+        !watchlistMode
+          ? `
             <button
               class="card-save ${isSaved ? "saved" : ""}"
               data-save-id="${item.id}"
+              data-save-type="${item.type}"
               aria-label="Save ${item.title}"
             >
               ${isSaved ? "✓" : "+"}
             </button>
           `
-            : ""
-        }
+          : ""
+      }
 
       <div class="poster-hover">
-
         <button class="details-circle">
           →
         </button>
-
       </div>
 
     </div>
-
 
     <div class="movie-info">
 
@@ -413,888 +442,1150 @@ function createMovieCard(item, watchlistMode = false) {
     </div>
   `;
 
-    return card;
+  return card;
 }
 
 
-/*
-|--------------------------------------------------------------------------
-| RENDER STANDARD SECTIONS
-|--------------------------------------------------------------------------
-*/
+/* =========================
+   RENDER MOVIE GRID
+========================= */
 
-function renderMovieGrid(items, container) {
+function renderMovieGrid(
+  items,
+  container
+) {
+  if (!container) return;
 
-    container.innerHTML = "";
+  container.innerHTML = "";
 
-    items.forEach(item => {
-
-        const card = createMovieCard(item);
-
-        container.appendChild(card);
-
-    });
-
-}
-
-
-renderMovieGrid(
-    trendingMovies,
-    trendingGrid
-);
-
-renderMovieGrid(
-    popularTVShows,
-    tvGrid
-);
-
-
-/*
-|--------------------------------------------------------------------------
-| FIND TITLE
-|--------------------------------------------------------------------------
-*/
-
-function findTitleById(id) {
-
-    const numberId = Number(id);
-
-    return (
-        allTitles.find(item => item.id === numberId) ||
-        watchlist.find(item => item.id === numberId) ||
-        completed.find(item => item.id === numberId)
+  items.forEach(item => {
+    container.appendChild(
+      createMovieCard(item)
     );
-
+  });
 }
 
 
-/*
-|--------------------------------------------------------------------------
-| WATCHLIST
-|--------------------------------------------------------------------------
-*/
+/* =========================
+   FIND TITLE
+========================= */
+
+function findTitleById(
+  id,
+  type = null
+) {
+  const numberId =
+    Number(id);
+
+  const allAvailableTitles = [
+    ...allTitles,
+    ...watchlist,
+    ...completed
+  ];
+
+  return allAvailableTitles.find(
+    item =>
+      item.id === numberId &&
+      (!type || item.type === type)
+  );
+}
+
+
+/* =========================
+   LOCAL STORAGE
+========================= */
+
+function saveLists() {
+  localStorage.setItem(
+    "cinevaultWatchlist",
+    JSON.stringify(watchlist)
+  );
+
+  localStorage.setItem(
+    "cinevaultCompleted",
+    JSON.stringify(completed)
+  );
+}
+
+
+/* =========================
+   ADD TO WATCHLIST
+========================= */
 
 function addToWatchlist(item) {
+  if (!item) return;
 
-    const alreadySaved = watchlist.some(
-        title => title.id === item.id
+  const alreadySaved =
+    watchlist.some(
+      title =>
+        title.id === item.id &&
+        title.type === item.type
     );
 
-    if (alreadySaved) {
+  if (alreadySaved) {
+    watchlist =
+      watchlist.filter(
+        title =>
+          !(
+            title.id === item.id &&
+            title.type === item.type
+          )
+      );
+  } else {
+    watchlist.push({
+      ...item,
+      addedAt: Date.now()
+    });
 
-        watchlist = watchlist.filter(
-            title => title.id !== item.id
-        );
+    completed =
+      completed.filter(
+        title =>
+          !(
+            title.id === item.id &&
+            title.type === item.type
+          )
+      );
+  }
 
-    } else {
-
-        watchlist.push({
-            ...item,
-            addedAt: Date.now()
-        });
-
-        completed = completed.filter(
-            title => title.id !== item.id
-        );
-
-    }
-
-    saveLists();
-
-    refreshUI();
+  saveLists();
+  refreshUI();
 }
 
+
+/* =========================
+   MARK COMPLETED
+========================= */
 
 function markCompleted(item) {
+  if (!item) return;
 
-    watchlist = watchlist.filter(
-        title => title.id !== item.id
+  watchlist =
+    watchlist.filter(
+      title =>
+        !(
+          title.id === item.id &&
+          title.type === item.type
+        )
     );
 
-    const alreadyCompleted = completed.some(
-        title => title.id === item.id
+  const alreadyCompleted =
+    completed.some(
+      title =>
+        title.id === item.id &&
+        title.type === item.type
     );
 
-    if (!alreadyCompleted) {
+  if (!alreadyCompleted) {
+    completed.push({
+      ...item,
+      addedAt: Date.now()
+    });
+  }
 
-        completed.push({
-            ...item,
-            addedAt: Date.now()
-        });
-
-    }
-
-    saveLists();
-
-    refreshUI();
+  saveLists();
+  refreshUI();
 }
 
+
+/* =========================
+   WATCH AGAIN
+========================= */
 
 function moveBackToWatchlist(item) {
+  if (!item) return;
 
-    completed = completed.filter(
-        title => title.id !== item.id
-    );
-
-    if (
-        !watchlist.some(
-            title => title.id === item.id
+  completed =
+    completed.filter(
+      title =>
+        !(
+          title.id === item.id &&
+          title.type === item.type
         )
-    ) {
-
-        watchlist.push({
-            ...item,
-            addedAt: Date.now()
-        });
-
-    }
-
-    saveLists();
-
-    refreshUI();
-}
-
-
-function removeFromCompleted(id) {
-
-    completed = completed.filter(
-        title => title.id !== Number(id)
     );
 
-    saveLists();
+  const alreadySaved =
+    watchlist.some(
+      title =>
+        title.id === item.id &&
+        title.type === item.type
+    );
 
-    refreshUI();
+  if (!alreadySaved) {
+    watchlist.push({
+      ...item,
+      addedAt: Date.now()
+    });
+  }
+
+  saveLists();
+  refreshUI();
 }
 
 
-/*
-|--------------------------------------------------------------------------
-| RENDER WATCHLIST
-|--------------------------------------------------------------------------
-*/
+/* =========================
+   REMOVE COMPLETED
+========================= */
+
+function removeFromCompleted(
+  id,
+  type
+) {
+  completed =
+    completed.filter(
+      title =>
+        !(
+          title.id === Number(id) &&
+          title.type === type
+        )
+    );
+
+  saveLists();
+  refreshUI();
+}
+
+
+/* =========================
+   RENDER WATCHLIST
+========================= */
 
 function renderWatchlist() {
+  let titles =
+    activeWatchlistTab ===
+    "wantToWatch"
+      ? [...watchlist]
+      : [...completed];
 
-    let titles =
-        activeWatchlistTab === "wantToWatch"
-            ? [...watchlist]
-            : [...completed];
+  const selectedType =
+    typeFilter.value;
 
-    const selectedType = typeFilter.value;
+  if (selectedType !== "all") {
+    titles =
+      titles.filter(
+        item =>
+          item.type ===
+          selectedType
+      );
+  }
 
-    if (selectedType !== "all") {
+  const selectedSort =
+    sortFilter.value;
 
-        titles = titles.filter(
-            item => item.type === selectedType
-        );
+  if (
+    selectedSort ===
+    "rating"
+  ) {
+    titles.sort(
+      (a, b) =>
+        Number(b.rating) -
+        Number(a.rating)
+    );
+  }
 
-    }
+  if (
+    selectedSort ===
+    "title"
+  ) {
+    titles.sort(
+      (a, b) =>
+        a.title.localeCompare(
+          b.title
+        )
+    );
+  }
 
+  if (
+    selectedSort ===
+    "recent"
+  ) {
+    titles.sort(
+      (a, b) =>
+        (b.addedAt || 0) -
+        (a.addedAt || 0)
+    );
+  }
 
-    const selectedSort = sortFilter.value;
+  watchlistGrid.innerHTML = "";
 
-    if (selectedSort === "rating") {
+  if (!titles.length) {
+    watchlistEmpty.classList.remove(
+      "hidden"
+    );
 
-        titles.sort(
-            (a, b) => b.rating - a.rating
-        );
+    watchlistGrid.classList.add(
+      "hidden"
+    );
+  } else {
+    watchlistEmpty.classList.add(
+      "hidden"
+    );
 
-    }
+    watchlistGrid.classList.remove(
+      "hidden"
+    );
 
-    if (selectedSort === "title") {
+    titles.forEach(item => {
+      watchlistGrid.appendChild(
+        createMovieCard(
+          item,
+          true
+        )
+      );
+    });
+  }
 
-        titles.sort(
-            (a, b) =>
-                a.title.localeCompare(b.title)
-        );
+  wantCount.textContent =
+    watchlist.length;
 
-    }
-
-    if (selectedSort === "recent") {
-
-        titles.sort(
-            (a, b) =>
-                (b.addedAt || 0) - (a.addedAt || 0)
-        );
-
-    }
-
-
-    watchlistGrid.innerHTML = "";
-
-
-    if (!titles.length) {
-
-        watchlistEmpty.classList.remove("hidden");
-        watchlistGrid.classList.add("hidden");
-
-    } else {
-
-        watchlistEmpty.classList.add("hidden");
-        watchlistGrid.classList.remove("hidden");
-
-        titles.forEach(item => {
-
-            const card = createMovieCard(
-                item,
-                true
-            );
-
-            watchlistGrid.appendChild(card);
-
-        });
-
-    }
-
-
-    wantCount.textContent = watchlist.length;
-    completedCount.textContent = completed.length;
-
+  completedCount.textContent =
+    completed.length;
 }
 
 
-/*
-|--------------------------------------------------------------------------
-| DETAILS MODAL
-|--------------------------------------------------------------------------
-*/
+/* =========================
+   FORMAT RUNTIME
+========================= */
 
-function openDetails(item) {
+function formatRuntime(minutes) {
+  if (!minutes) return "";
 
-    if (!item) return;
+  const hours =
+    Math.floor(minutes / 60);
 
-    selectedTitle = item;
+  const remainingMinutes =
+    minutes % 60;
 
-    modalTitle.textContent = item.title;
+  if (!hours) {
+    return `${remainingMinutes}m`;
+  }
 
-    modalRating.textContent = item.rating;
-
-    modalYear.textContent = item.year;
-
-    modalRuntime.textContent =
-        item.runtime || "";
-
-    modalDescription.textContent =
-        item.description || "";
-
-    modalDirector.textContent =
-        item.director || "Not available";
-
-    modalReleaseDate.textContent =
-        item.releaseDate || item.year;
-
-    modalType.textContent =
-        item.type === "tv"
-            ? "TV SHOW"
-            : "MOVIE";
+  return `${hours}h ${remainingMinutes}m`;
+}
 
 
-    modalPoster.src = item.poster || "";
+/* =========================
+   GET FULL DETAILS
+========================= */
 
-    modalBackdrop.src = item.backdrop || "";
+async function getFullDetails(item) {
+  if (!item) return null;
+
+  const endpoint =
+    item.type === "tv"
+      ? `/tv/${item.id}?language=en-US&append_to_response=credits`
+      : `/movie/${item.id}?language=en-US&append_to_response=credits`;
+
+  const data =
+    await fetchFromTMDB(
+      endpoint
+    );
+
+  if (!data) {
+    return item;
+  }
+
+  let director =
+    "Not available";
+
+  if (item.type === "movie") {
+    const directorData =
+      data.credits?.crew?.find(
+        person =>
+          person.job ===
+          "Director"
+      );
+
+    if (directorData) {
+      director =
+        directorData.name;
+    }
+  } else {
+    if (
+      data.created_by &&
+      data.created_by.length
+    ) {
+      director =
+        data.created_by
+          .map(
+            person =>
+              person.name
+          )
+          .join(", ");
+    }
+  }
+
+  let runtime = "";
+
+  if (item.type === "movie") {
+    runtime =
+      formatRuntime(
+        data.runtime
+      );
+  } else {
+    if (
+      data.number_of_episodes
+    ) {
+      runtime =
+        `${data.number_of_episodes} Episodes`;
+    }
+  }
+
+  const releaseDate =
+    data.release_date ||
+    data.first_air_date ||
+    item.releaseDate;
+
+  const year =
+    releaseDate
+      ? releaseDate.substring(
+          0,
+          4
+        )
+      : item.year;
+
+  return {
+    ...item,
+
+    title:
+      data.title ||
+      data.name ||
+      item.title,
+
+    year,
+
+    rating:
+      typeof data.vote_average ===
+      "number"
+        ? data.vote_average.toFixed(
+            1
+          )
+        : item.rating,
+
+    description:
+      data.overview ||
+      item.description,
+
+    runtime,
+
+    director,
+
+    genres:
+      data.genres
+        ? data.genres.map(
+            genre =>
+              genre.name
+          )
+        : [],
+
+    genre:
+      data.genres?.[0]?.name ||
+      item.genre ||
+      "",
+
+    releaseDate:
+      releaseDate ||
+      "Not available",
+
+    poster:
+      data.poster_path
+        ? `${TMDB_IMAGE_URL}${data.poster_path}`
+        : item.poster,
+
+    backdrop:
+      data.backdrop_path
+        ? `${TMDB_BACKDROP_URL}${data.backdrop_path}`
+        : item.backdrop
+  };
+}
 
 
-    modalGenres.innerHTML = "";
+/* =========================
+   OPEN DETAILS MODAL
+========================= */
 
-    const genres =
-        item.genres ||
-        [item.genre];
+async function openDetails(item) {
+  if (!item) return;
 
-    genres.forEach(genre => {
+  selectedTitle =
+    await getFullDetails(item);
 
-        const genreElement =
-            document.createElement("span");
+  if (!selectedTitle) return;
 
-        genreElement.textContent = genre;
+  modalTitle.textContent =
+    selectedTitle.title;
+
+  modalRating.textContent =
+    selectedTitle.rating;
+
+  modalYear.textContent =
+    selectedTitle.year;
+
+  modalRuntime.textContent =
+    selectedTitle.runtime ||
+    "";
+
+  modalDescription.textContent =
+    selectedTitle.description ||
+    "No description available.";
+
+  modalDirector.textContent =
+    selectedTitle.director ||
+    "Not available";
+
+  modalReleaseDate.textContent =
+    selectedTitle.releaseDate ||
+    "Not available";
+
+  modalType.textContent =
+    selectedTitle.type === "tv"
+      ? "TV SHOW"
+      : "MOVIE";
+
+  modalPoster.src =
+    selectedTitle.poster ||
+    "";
+
+  modalBackdrop.src =
+    selectedTitle.backdrop ||
+    "";
+
+  modalPoster.alt =
+    selectedTitle.title;
+
+  modalBackdrop.alt =
+    selectedTitle.title;
+
+  modalGenres.innerHTML = "";
+
+  if (
+    selectedTitle.genres &&
+    selectedTitle.genres.length
+  ) {
+    selectedTitle.genres.forEach(
+      genre => {
+        const span =
+          document.createElement(
+            "span"
+          );
+
+        span.textContent =
+          genre;
 
         modalGenres.appendChild(
-            genreElement
+          span
         );
-
-    });
-
-
-    updateModalButtons();
-
-    detailsModal.classList.add("active");
-
-    document.body.classList.add(
-        "modal-open"
+      }
     );
+  }
 
+  updateModalButtons();
+
+  detailsModal.classList.add(
+    "active"
+  );
+
+  document.body.classList.add(
+    "modal-open"
+  );
 }
 
+
+/* =========================
+   CLOSE MODAL
+========================= */
 
 function closeModal() {
+  detailsModal.classList.remove(
+    "active"
+  );
 
-    detailsModal.classList.remove("active");
-
-    document.body.classList.remove(
-        "modal-open"
-    );
-
+  document.body.classList.remove(
+    "modal-open"
+  );
 }
 
+
+/* =========================
+   UPDATE MODAL BUTTONS
+========================= */
 
 function updateModalButtons() {
+  if (!selectedTitle) return;
 
-    const inWatchlist = watchlist.some(
-        item => item.id === selectedTitle.id
+  const inWatchlist =
+    watchlist.some(
+      item =>
+        item.id ===
+          selectedTitle.id &&
+        item.type ===
+          selectedTitle.type
     );
 
-    const isCompleted = completed.some(
-        item => item.id === selectedTitle.id
+  const isCompleted =
+    completed.some(
+      item =>
+        item.id ===
+          selectedTitle.id &&
+        item.type ===
+          selectedTitle.type
     );
 
+  modalWatchlistBtn.textContent =
+    inWatchlist
+      ? "✓ In Watchlist"
+      : "+ Add to Watchlist";
 
-    modalWatchlistBtn.textContent =
-        inWatchlist
-            ? "✓ In Watchlist"
-            : "+ Add to Watchlist";
-
-
-    modalCompleteBtn.textContent =
-        isCompleted
-            ? "✓ Completed"
-            : "Mark Completed";
-
+  modalCompleteBtn.textContent =
+    isCompleted
+      ? "✓ Completed"
+      : "Mark Completed";
 }
 
 
-/*
-|--------------------------------------------------------------------------
-| SEARCH
-|--------------------------------------------------------------------------
-*/
+/* =========================
+   SEARCH TMDB
+========================= */
 
-function handleSearch() {
+async function handleSearch() {
+  const query =
+    searchInput.value.trim();
 
-    const query =
-        searchInput.value
-            .trim()
-            .toLowerCase();
+  if (!query) {
+    clearSearch();
+    return;
+  }
 
-
-    if (!query) {
-
-        clearSearch();
-
-        return;
-    }
-
-
-    const results = allTitles.filter(item => {
-
-        return (
-            item.title
-                .toLowerCase()
-                .includes(query) ||
-
-            item.genre
-                .toLowerCase()
-                .includes(query)
-        );
-
-    });
-
-
-    searchResultsSection.classList.remove(
-        "hidden"
+  const data =
+    await fetchFromTMDB(
+      `/search/multi?query=${encodeURIComponent(
+        query
+      )}&include_adult=false&language=en-US&page=1`
     );
 
-    trendingSection.classList.add(
-        "hidden"
+  searchResultsSection.classList.remove(
+    "hidden"
+  );
+
+  trendingSection.classList.add(
+    "hidden"
+  );
+
+  if (
+    !data ||
+    !data.results
+  ) {
+    showNoSearchResults();
+    return;
+  }
+
+  const results =
+    data.results
+      .filter(
+        item =>
+          item.media_type ===
+            "movie" ||
+          item.media_type ===
+            "tv"
+      )
+      .map(item =>
+        formatTMDBItem(
+          item,
+          item.media_type
+        )
+      );
+
+  searchResults.innerHTML =
+    "";
+
+  if (!results.length) {
+    showNoSearchResults();
+    return;
+  }
+
+  searchResults.classList.remove(
+    "hidden"
+  );
+
+  searchEmptyState.classList.add(
+    "hidden"
+  );
+
+  results.forEach(item => {
+    searchResults.appendChild(
+      createMovieCard(item)
     );
+  });
+}
 
 
-    searchResults.innerHTML = "";
+function showNoSearchResults() {
+  searchResults.innerHTML =
+    "";
 
+  searchResults.classList.add(
+    "hidden"
+  );
 
-    if (!results.length) {
-
-        searchResults.classList.add("hidden");
-
-        searchEmptyState.classList.remove(
-            "hidden"
-        );
-
-    } else {
-
-        searchResults.classList.remove("hidden");
-
-        searchEmptyState.classList.add(
-            "hidden"
-        );
-
-        results.forEach(item => {
-
-            searchResults.appendChild(
-                createMovieCard(item)
-            );
-
-        });
-
-    }
-
+  searchEmptyState.classList.remove(
+    "hidden"
+  );
 }
 
 
 function clearSearch() {
+  searchInput.value = "";
 
-    searchInput.value = "";
+  searchResultsSection.classList.add(
+    "hidden"
+  );
 
-    searchResultsSection.classList.add(
-        "hidden"
-    );
+  trendingSection.classList.remove(
+    "hidden"
+  );
 
-    trendingSection.classList.remove(
-        "hidden"
-    );
+  searchResults.innerHTML =
+    "";
 
-    searchResults.innerHTML = "";
-
+  searchEmptyState.classList.add(
+    "hidden"
+  );
 }
 
 
-/*
-|--------------------------------------------------------------------------
-| REFRESH UI
-|--------------------------------------------------------------------------
-*/
+/* =========================
+   REFRESH UI
+========================= */
 
 function refreshUI() {
+  renderMovieGrid(
+    trendingMovies,
+    trendingGrid
+  );
 
-    renderMovieGrid(
-        trendingMovies,
-        trendingGrid
-    );
+  renderMovieGrid(
+    popularTVShows,
+    tvGrid
+  );
 
-    renderMovieGrid(
-        popularTVShows,
-        tvGrid
-    );
+  renderWatchlist();
 
-    renderWatchlist();
+  updateHeroButton();
 
-    if (
-        detailsModal.classList.contains(
-            "active"
-        )
-    ) {
-
-        updateModalButtons();
-
-    }
-
-
-    const heroSaved = watchlist.some(
-        item =>
-            item.id === trendingMovies[0].id
-    );
-
-
-    heroWatchlistBtn.innerHTML =
-        heroSaved
-            ? "✓ In Watchlist"
-            : "<span>+</span> Add to Watchlist";
-
+  if (
+    detailsModal.classList.contains(
+      "active"
+    )
+  ) {
+    updateModalButtons();
+  }
 }
 
 
-/*
-|--------------------------------------------------------------------------
-| GENERAL CLICK EVENTS
-|--------------------------------------------------------------------------
-*/
+/* =========================
+   GENERAL CLICK EVENTS
+========================= */
 
 document.addEventListener(
-    "click",
-    function (event) {
+  "click",
+  function(event) {
 
-        const saveButton =
-            event.target.closest(
-                "[data-save-id]"
-            );
+    const saveButton =
+      event.target.closest(
+        "[data-save-id]"
+      );
 
+    if (saveButton) {
+      event.stopPropagation();
 
-        if (saveButton) {
+      const item =
+        findTitleById(
+          saveButton.dataset.saveId,
+          saveButton.dataset.saveType
+        );
 
-            event.stopPropagation();
+      addToWatchlist(item);
 
-            const item = findTitleById(
-                saveButton.dataset.saveId
-            );
-
-            addToWatchlist(item);
-
-            return;
-
-        }
-
-
-        const detailsTarget =
-            event.target.closest(
-                "[data-details-id]"
-            );
-
-
-        if (detailsTarget) {
-
-            const item = findTitleById(
-                detailsTarget.dataset.detailsId
-            );
-
-            openDetails(item);
-
-            return;
-
-        }
-
-
-        const completeButton =
-            event.target.closest(
-                "[data-complete-id]"
-            );
-
-
-        if (completeButton) {
-
-            const item = findTitleById(
-                completeButton.dataset.completeId
-            );
-
-            markCompleted(item);
-
-            return;
-
-        }
-
-
-        const removeButton =
-            event.target.closest(
-                "[data-remove-id]"
-            );
-
-
-        if (removeButton) {
-
-            const id = Number(
-                removeButton.dataset.removeId
-            );
-
-            watchlist = watchlist.filter(
-                item => item.id !== id
-            );
-
-            saveLists();
-
-            refreshUI();
-
-            return;
-
-        }
-
-
-        const moveBackButton =
-            event.target.closest(
-                "[data-move-back-id]"
-            );
-
-
-        if (moveBackButton) {
-
-            const item = findTitleById(
-                moveBackButton.dataset.moveBackId
-            );
-
-            moveBackToWatchlist(item);
-
-            return;
-
-        }
-
-
-        const removeCompletedButton =
-            event.target.closest(
-                "[data-remove-completed-id]"
-            );
-
-
-        if (removeCompletedButton) {
-
-            removeFromCompleted(
-                removeCompletedButton
-                    .dataset
-                    .removeCompletedId
-            );
-
-        }
-
+      return;
     }
+
+
+    const detailsTarget =
+      event.target.closest(
+        "[data-details-id]"
+      );
+
+    if (detailsTarget) {
+      const item =
+        findTitleById(
+          detailsTarget.dataset.detailsId,
+          detailsTarget.dataset.detailsType
+        );
+
+      openDetails(item);
+
+      return;
+    }
+
+
+    const completeButton =
+      event.target.closest(
+        "[data-complete-id]"
+      );
+
+    if (completeButton) {
+      const item =
+        findTitleById(
+          completeButton.dataset.completeId,
+          completeButton.dataset.completeType
+        );
+
+      markCompleted(item);
+
+      return;
+    }
+
+
+    const removeButton =
+      event.target.closest(
+        "[data-remove-id]"
+      );
+
+    if (removeButton) {
+      const id =
+        Number(
+          removeButton.dataset.removeId
+        );
+
+      const type =
+        removeButton.dataset.removeType;
+
+      watchlist =
+        watchlist.filter(
+          item =>
+            !(
+              item.id === id &&
+              item.type === type
+            )
+        );
+
+      saveLists();
+      refreshUI();
+
+      return;
+    }
+
+
+    const moveBackButton =
+      event.target.closest(
+        "[data-move-back-id]"
+      );
+
+    if (moveBackButton) {
+      const item =
+        findTitleById(
+          moveBackButton.dataset.moveBackId,
+          moveBackButton.dataset.moveBackType
+        );
+
+      moveBackToWatchlist(
+        item
+      );
+
+      return;
+    }
+
+
+    const removeCompletedButton =
+      event.target.closest(
+        "[data-remove-completed-id]"
+      );
+
+    if (
+      removeCompletedButton
+    ) {
+      removeFromCompleted(
+        removeCompletedButton.dataset.removeCompletedId,
+        removeCompletedButton.dataset.removeCompletedType
+      );
+
+      return;
+    }
+  }
 );
 
 
-/*
-|--------------------------------------------------------------------------
-| WATCHLIST TABS
-|--------------------------------------------------------------------------
-*/
+/* =========================
+   WATCHLIST TABS
+========================= */
 
 document
-    .querySelectorAll(".watchlist-tab")
-    .forEach(tab => {
+  .querySelectorAll(
+    ".watchlist-tab"
+  )
+  .forEach(tab => {
 
-        tab.addEventListener(
-            "click",
-            function () {
+    tab.addEventListener(
+      "click",
+      function() {
 
-                document
-                    .querySelectorAll(
-                        ".watchlist-tab"
-                    )
-                    .forEach(item =>
-                        item.classList.remove(
-                            "active"
-                        )
-                    );
+        document
+          .querySelectorAll(
+            ".watchlist-tab"
+          )
+          .forEach(item =>
+            item.classList.remove(
+              "active"
+            )
+          );
 
-
-                this.classList.add("active");
-
-                activeWatchlistTab =
-                    this.dataset.tab;
-
-                renderWatchlist();
-
-            }
+        this.classList.add(
+          "active"
         );
 
-    });
+        activeWatchlistTab =
+          this.dataset.tab;
+
+        renderWatchlist();
+      }
+    );
+  });
 
 
-/*
-|--------------------------------------------------------------------------
-| COMPLETED NAVIGATION
-|--------------------------------------------------------------------------
-*/
+/* =========================
+   COMPLETED NAVIGATION
+========================= */
 
 document
-    .querySelectorAll(
-        "[data-open-completed]"
-    )
-    .forEach(link => {
+  .querySelectorAll(
+    "[data-open-completed]"
+  )
+  .forEach(link => {
 
-        link.addEventListener(
-            "click",
-            function () {
+    link.addEventListener(
+      "click",
+      function() {
 
-                activeWatchlistTab =
-                    "completed";
+        activeWatchlistTab =
+          "completed";
 
-                document
-                    .querySelectorAll(
-                        ".watchlist-tab"
-                    )
-                    .forEach(tab => {
+        document
+          .querySelectorAll(
+            ".watchlist-tab"
+          )
+          .forEach(tab => {
 
-                        tab.classList.toggle(
-                            "active",
-                            tab.dataset.tab ===
-                            "completed"
-                        );
+            tab.classList.toggle(
+              "active",
+              tab.dataset.tab ===
+                "completed"
+            );
+          });
 
-                    });
-
-                renderWatchlist();
-
-            }
-        );
-
-    });
+        renderWatchlist();
+      }
+    );
+  });
 
 
-/*
-|--------------------------------------------------------------------------
-| FILTERS
-|--------------------------------------------------------------------------
-*/
+/* =========================
+   FILTERS
+========================= */
 
 typeFilter.addEventListener(
-    "change",
-    renderWatchlist
+  "change",
+  renderWatchlist
 );
 
 sortFilter.addEventListener(
-    "change",
-    renderWatchlist
+  "change",
+  renderWatchlist
 );
 
 
-/*
-|--------------------------------------------------------------------------
-| MODAL EVENTS
-|--------------------------------------------------------------------------
-*/
+/* =========================
+   MODAL EVENTS
+========================= */
 
 modalClose.addEventListener(
-    "click",
-    closeModal
+  "click",
+  closeModal
 );
-
 
 detailsModal.addEventListener(
-    "click",
-    function (event) {
+  "click",
+  function(event) {
 
-        if (
-            event.target === detailsModal
-        ) {
-
-            closeModal();
-
-        }
-
+    if (
+      event.target ===
+      detailsModal
+    ) {
+      closeModal();
     }
+  }
 );
 
-
 document.addEventListener(
-    "keydown",
-    function (event) {
+  "keydown",
+  function(event) {
 
-        if (event.key === "Escape") {
-
-            closeModal();
-
-        }
-
+    if (
+      event.key ===
+      "Escape"
+    ) {
+      closeModal();
     }
+  }
 );
 
 
 modalWatchlistBtn.addEventListener(
-    "click",
-    function () {
+  "click",
+  function() {
 
-        addToWatchlist(
-            selectedTitle
-        );
-
+    if (!selectedTitle) {
+      return;
     }
+
+    addToWatchlist(
+      selectedTitle
+    );
+  }
 );
 
 
 modalCompleteBtn.addEventListener(
-    "click",
-    function () {
+  "click",
+  function() {
 
-        if (
-            completed.some(
-                item =>
-                    item.id === selectedTitle.id
-            )
-        ) {
-
-            return;
-
-        }
-
-        markCompleted(
-            selectedTitle
-        );
-
+    if (!selectedTitle) {
+      return;
     }
+
+    const alreadyCompleted =
+      completed.some(
+        item =>
+          item.id ===
+            selectedTitle.id &&
+          item.type ===
+            selectedTitle.type
+      );
+
+    if (alreadyCompleted) {
+      return;
+    }
+
+    markCompleted(
+      selectedTitle
+    );
+  }
 );
 
 
-/*
-|--------------------------------------------------------------------------
-| HERO EVENTS
-|--------------------------------------------------------------------------
-*/
+/* =========================
+   HERO EVENTS
+========================= */
 
 heroDetailsBtn.addEventListener(
-    "click",
-    function () {
+  "click",
+  function() {
 
-        openDetails(
-            trendingMovies[0]
-        );
-
+    if (!selectedTitle) {
+      return;
     }
+
+    openDetails(
+      selectedTitle
+    );
+  }
 );
 
 
 heroWatchlistBtn.addEventListener(
-    "click",
-    function () {
+  "click",
+  function() {
 
-        addToWatchlist(
-            trendingMovies[0]
-        );
-
+    if (!selectedTitle) {
+      return;
     }
+
+    addToWatchlist(
+      selectedTitle
+    );
+  }
 );
 
 
-/*
-|--------------------------------------------------------------------------
-| SEARCH EVENTS
-|--------------------------------------------------------------------------
-*/
+/* =========================
+   SEARCH EVENTS
+========================= */
 
 searchInput.addEventListener(
-    "input",
-    handleSearch
+  "input",
+  function() {
+
+    clearTimeout(
+      searchTimeout
+    );
+
+    searchTimeout =
+      setTimeout(
+        handleSearch,
+        500
+      );
+  }
 );
 
 
 clearSearchBtn.addEventListener(
-    "click",
-    clearSearch
+  "click",
+  clearSearch
 );
 
 
-/*
-|--------------------------------------------------------------------------
-| MOBILE MENU
-|--------------------------------------------------------------------------
-*/
+/* =========================
+   MOBILE MENU
+========================= */
 
 mobileMenuBtn.addEventListener(
-    "click",
-    function () {
+  "click",
+  function() {
 
-        mobileMenu.classList.toggle(
-            "active"
-        );
-
-    }
+    mobileMenu.classList.toggle(
+      "active"
+    );
+  }
 );
 
 
 mobileMenu
-    .querySelectorAll("a")
-    .forEach(link => {
+  .querySelectorAll("a")
+  .forEach(link => {
 
-        link.addEventListener(
-            "click",
-            function () {
+    link.addEventListener(
+      "click",
+      function() {
 
-                mobileMenu.classList.remove(
-                    "active"
-                );
-
-            }
+        mobileMenu.classList.remove(
+          "active"
         );
+      }
+    );
+  });
 
-    });
+
+/* =========================
+   INITIALISE APP
+========================= */
+
+async function initialiseApp() {
+  renderWatchlist();
+
+  await Promise.all([
+    loadTrending(),
+    loadPopularTV()
+  ]);
+
+  refreshUI();
+}
 
 
-/*
-|--------------------------------------------------------------------------
-| INITIAL LOAD
-|--------------------------------------------------------------------------
-*/
-
-refreshUI();
+initialiseApp();
