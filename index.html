@@ -1,390 +1,308 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CineVault</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CineVault</title>
+  <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
 
-    <header class="navbar">
-        <div class="container nav-container">
-
-            <a href="#" class="logo">
-                <img src="" alt="">
-                <span>CineVault</span>
-            </a>
-
-            <nav class="desktop-nav">
-                <a href="#explore" class="nav-link active">Explore</a>
-                <a href="#watchlist" class="nav-link">My Watchlist</a>
-                <a href="#watchlist" class="nav-link" data-open-completed="true">Completed</a>
-            </nav>
-
-            <div class="nav-actions">
-
-                <div class="search-box">
-                    <img src="" alt="">
-                    <input type="text" id="searchInput" placeholder="Search movies & shows">
-                </div>
-
-                <button class="mobile-menu-btn" id="mobileMenuBtn">
-                    <img src="" alt="">
-                </button>
-
-            </div>
-
-        </div>
-
-        <div class="mobile-menu" id="mobileMenu">
-            <a href="#explore">Explore</a>
-            <a href="#watchlist">My Watchlist</a>
-            <a href="#watchlist" data-open-completed="true">Completed</a>
-        </div>
-    </header>
-
-
-    <main>
-
-        <!-- HERO -->
-        <section class="hero">
-
-            <div class="hero-backdrop">
-                <img src="" alt="" id="heroImage">
-            </div>
-
-            <div class="hero-overlay"></div>
-
-            <div class="container hero-content">
-
-                <p class="hero-label">YOUR NEXT OBSESSION STARTS HERE</p>
-
-                <h1 id="heroTitle">Beyond the Unknown</h1>
-
-                <p class="hero-description" id="heroDescription">
-                    A gripping story about adventure, mystery, and survival.
-                </p>
-
-                <div class="hero-meta">
-                    <span>
-                        <span class="star">★</span>
-                        <span id="heroRating">8.7/10</span>
-                    </span>
-
-                    <span id="heroYear">2026</span>
-
-                    <span id="heroGenre">Sci-Fi</span>
-                </div>
-
-                <div class="hero-buttons">
-
-                    <button class="btn btn-primary" id="heroWatchlistBtn">
-                        <span>+</span>
-                        Add to Watchlist
-                    </button>
-
-                    <button class="btn btn-secondary" id="heroDetailsBtn">
-                        View Details
-                    </button>
-
-                </div>
-
-            </div>
-
-        </section>
-
-
-        <!-- EXPLORE -->
-        <section class="explore-section" id="explore">
-
-            <div class="container">
-
-                <!-- Search Results -->
-                <div class="content-section hidden" id="searchResultsSection">
-
-                    <div class="section-heading">
-                        <div>
-                            <p class="section-tag">SEARCH</p>
-                            <h2>Search Results</h2>
-                        </div>
-
-                        <button class="text-btn" id="clearSearchBtn">
-                            Clear
-                        </button>
-                    </div>
-
-                    <div class="movie-grid" id="searchResults"></div>
-
-                    <div class="empty-state hidden" id="searchEmptyState">
-                        <h3>No results found</h3>
-                        <p>Try searching for another movie or TV show.</p>
-                    </div>
-
-                </div>
-
-
-                <!-- Trending -->
-                <div class="content-section" id="trendingSection">
-
-                    <div class="section-heading">
-
-                        <div class="heading-title">
-                            <span class="heading-icon">
-                                <img src="" alt="">
-                            </span>
-
-                            <div>
-                                <p class="section-tag">TRENDING</p>
-                                <h2>Trending This Week</h2>
-                            </div>
-                        </div>
-
-                        <button class="text-btn">
-                            View All
-                            <span>→</span>
-                        </button>
-
-                    </div>
-
-                    <div class="movie-grid" id="trendingGrid"></div>
-
-                </div>
-
-
-                <!-- TV Shows -->
-                <div class="content-section">
-
-                    <div class="section-heading">
-
-                        <div class="heading-title">
-                            <span class="heading-icon">
-                                <img src="" alt="">
-                            </span>
-
-                            <div>
-                                <p class="section-tag">TV SHOWS</p>
-                                <h2>Popular TV Shows</h2>
-                            </div>
-                        </div>
-
-                        <button class="text-btn">
-                            View All
-                            <span>→</span>
-                        </button>
-
-                    </div>
-
-                    <div class="movie-grid" id="tvGrid"></div>
-
-                </div>
-
-            </div>
-
-        </section>
-
-
-        <!-- WATCHLIST -->
-        <section class="watchlist-section" id="watchlist">
-
-            <div class="container">
-
-                <div class="watchlist-header">
-
-                    <p class="section-tag">YOUR COLLECTION</p>
-
-                    <h2>
-                        <span class="watchlist-icon">
-                            <img src="" alt="">
-                        </span>
-                        My Watchlist
-                    </h2>
-
-                    <p>
-                        Keep track of everything you want to watch and everything
-                        you've already completed.
-                    </p>
-
-                </div>
-
-
-                <div class="watchlist-tabs">
-
-                    <button class="watchlist-tab active" data-tab="wantToWatch">
-                        Want to Watch
-                        <span id="wantCount">0</span>
-                    </button>
-
-                    <button class="watchlist-tab" data-tab="completed">
-                        Completed
-                        <span id="completedCount">0</span>
-                    </button>
-
-                </div>
-
-
-                <div class="watchlist-toolbar">
-
-                    <select id="typeFilter">
-                        <option value="all">All Titles</option>
-                        <option value="movie">Movies</option>
-                        <option value="tv">TV Shows</option>
-                    </select>
-
-                    <select id="sortFilter">
-                        <option value="recent">Recently Added</option>
-                        <option value="rating">Highest Rated</option>
-                        <option value="title">Title A-Z</option>
-                    </select>
-
-                </div>
-
-
-                <div class="movie-grid" id="watchlistGrid"></div>
-
-
-                <div class="empty-state" id="watchlistEmpty">
-
-                    <div class="empty-icon">
-                        <img src="" alt="">
-                    </div>
-
-                    <h3>Your watchlist is empty</h3>
-
-                    <p>
-                        Start exploring and save movies or TV shows you want to watch.
-                    </p>
-
-                    <a href="#explore" class="btn btn-primary">
-                        Explore Titles
-                    </a>
-
-                </div>
-
-            </div>
-
-        </section>
-
-    </main>
-
-
-    <!-- MOVIE DETAILS MODAL -->
-    <div class="modal-overlay" id="detailsModal">
-
-        <div class="details-modal">
-
-            <button class="modal-close" id="modalClose">
-                ×
-            </button>
-
-            <div class="modal-backdrop">
-                <img src="" alt="" id="modalBackdrop">
-                <div class="modal-backdrop-overlay"></div>
-            </div>
-
-
-            <div class="modal-content">
-
-                <div class="modal-poster">
-                    <img src="" alt="" id="modalPoster">
-                </div>
-
-
-                <div class="modal-info">
-
-                    <span class="media-type" id="modalType">MOVIE</span>
-
-                    <h2 id="modalTitle">Movie Title</h2>
-
-                    <div class="modal-meta">
-
-                        <span>
-                            <span class="star">★</span>
-                            <span id="modalRating">8.7</span>
-                        </span>
-
-                        <span id="modalYear">2026</span>
-
-                        <span id="modalRuntime">2h 10m</span>
-
-                    </div>
-
-
-                    <div class="modal-genres" id="modalGenres">
-                        <span>Sci-Fi</span>
-                        <span>Adventure</span>
-                    </div>
-
-
-                    <p class="modal-description" id="modalDescription">
-                        Movie description will appear here.
-                    </p>
-
-
-                    <div class="modal-extra">
-
-                        <div>
-                            <span class="extra-label">Director</span>
-                            <p id="modalDirector">Director name</p>
-                        </div>
-
-                        <div>
-                            <span class="extra-label">Release Date</span>
-                            <p id="modalReleaseDate">2026</p>
-                        </div>
-
-                    </div>
-
-
-                    <div class="modal-actions">
-
-                        <button class="btn btn-primary" id="modalWatchlistBtn">
-                            + Add to Watchlist
-                        </button>
-
-                        <button class="btn btn-outline" id="modalCompleteBtn">
-                            Mark Completed
-                        </button>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-        </div>
-
+<header class="navbar">
+  <div class="container nav-container">
+    <a href="#" class="logo">
+      <img src="" alt="">
+      <span>CineVault</span>
+    </a>
+
+    <nav class="desktop-nav">
+      <a href="#explore" class="nav-link active">Explore</a>
+      <a href="#watchlist" class="nav-link">My Watchlist</a>
+      <a href="#watchlist" class="nav-link" data-open-completed="true">Completed</a>
+    </nav>
+
+    <div class="nav-actions">
+      <div class="search-box">
+        <img src="" alt="">
+        <input type="text" id="searchInput" placeholder="Search movies & shows">
+      </div>
+
+      <button class="mobile-menu-btn" id="mobileMenuBtn">
+        <img src="" alt="">
+      </button>
+    </div>
+  </div>
+
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="#explore">Explore</a>
+    <a href="#watchlist">My Watchlist</a>
+    <a href="#watchlist" data-open-completed="true">Completed</a>
+  </div>
+</header>
+
+<main>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-backdrop">
+      <img src="" alt="" id="heroImage">
     </div>
 
+    <div class="hero-overlay"></div>
 
-    <footer>
+    <div class="container hero-content">
+      <p class="hero-label">YOUR NEXT OBSESSION STARTS HERE</p>
 
-        <div class="container footer-container">
+      <h1 id="heroTitle">Loading...</h1>
 
-            <div>
-                <a href="#" class="logo footer-logo">
-                    <img src="" alt="">
-                    <span>CineVault</span>
-                </a>
+      <p class="hero-description" id="heroDescription">
+        Discover your next favourite movie or TV show.
+      </p>
 
-                <p>
-                    Discover your next favourite. Keep track of every story.
-                </p>
-            </div>
+      <div class="hero-meta">
+        <span>
+          <span class="star">★</span>
+          <span id="heroRating">0.0/10</span>
+        </span>
+        <span id="heroYear">----</span>
+        <span id="heroGenre">Movie</span>
+      </div>
 
-            <p class="copyright">
-                © 2026 CineVault
-            </p>
+      <div class="hero-buttons">
+        <button class="btn btn-primary" id="heroWatchlistBtn">
+          <span>+</span>
+          Add to Watchlist
+        </button>
 
+        <button class="btn btn-secondary" id="heroDetailsBtn">
+          View Details
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- EXPLORE -->
+  <section class="explore-section" id="explore">
+    <div class="container">
+
+      <!-- SEARCH RESULTS -->
+      <div class="content-section hidden" id="searchResultsSection">
+        <div class="section-heading">
+          <div>
+            <p class="section-tag">SEARCH</p>
+            <h2>Search Results</h2>
+          </div>
+
+          <button class="text-btn" id="clearSearchBtn">Clear</button>
         </div>
 
-    </footer>
+        <div class="movie-grid" id="searchResults"></div>
 
+        <div class="empty-state hidden" id="searchEmptyState">
+          <h3>No results found</h3>
+          <p>Try searching for another movie or TV show.</p>
+        </div>
+      </div>
 
-    <script src="script.js"></script>
+      <!-- TRENDING -->
+      <div class="content-section" id="trendingSection">
+        <div class="section-heading">
+          <div class="heading-title">
+            <span class="heading-icon">
+              <img src="" alt="">
+            </span>
 
+            <div>
+              <p class="section-tag">TRENDING</p>
+              <h2>Trending This Week</h2>
+            </div>
+          </div>
+
+          <button class="text-btn" id="trendingViewAllBtn">
+            View All
+            <span>→</span>
+          </button>
+        </div>
+
+        <div class="movie-grid" id="trendingGrid"></div>
+      </div>
+
+      <!-- POPULAR TV -->
+      <div class="content-section" id="tvSection">
+        <div class="section-heading">
+          <div class="heading-title">
+            <span class="heading-icon">
+              <img src="" alt="">
+            </span>
+
+            <div>
+              <p class="section-tag">TV SHOWS</p>
+              <h2>Popular TV Shows</h2>
+            </div>
+          </div>
+
+          <button class="text-btn" id="tvViewAllBtn">
+            View All
+            <span>→</span>
+          </button>
+        </div>
+
+        <div class="movie-grid" id="tvGrid"></div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- WATCHLIST -->
+  <section class="watchlist-section" id="watchlist">
+    <div class="container">
+
+      <div class="watchlist-header">
+        <p class="section-tag">YOUR COLLECTION</p>
+
+        <h2>
+          <span class="watchlist-icon">
+            <img src="" alt="">
+          </span>
+          My Watchlist
+        </h2>
+
+        <p>
+          Keep track of everything you want to watch and everything you've already completed.
+        </p>
+      </div>
+
+      <div class="watchlist-tabs">
+        <button class="watchlist-tab active" data-tab="wantToWatch">
+          Want to Watch
+          <span id="wantCount">0</span>
+        </button>
+
+        <button class="watchlist-tab" data-tab="completed">
+          Completed
+          <span id="completedCount">0</span>
+        </button>
+      </div>
+
+      <div class="watchlist-toolbar">
+        <select id="typeFilter">
+          <option value="all">All Titles</option>
+          <option value="movie">Movies</option>
+          <option value="tv">TV Shows</option>
+        </select>
+
+        <select id="sortFilter">
+          <option value="recent">Recently Added</option>
+          <option value="rating">Highest Rated</option>
+          <option value="title">Title A-Z</option>
+        </select>
+      </div>
+
+      <div class="movie-grid" id="watchlistGrid"></div>
+
+      <div class="empty-state" id="watchlistEmpty">
+        <div class="empty-icon">
+          <img src="" alt="">
+        </div>
+
+        <h3>Your watchlist is empty</h3>
+
+        <p>
+          Start exploring and save movies or TV shows you want to watch.
+        </p>
+
+        <a href="#explore" class="btn btn-primary">
+          Explore Titles
+        </a>
+      </div>
+
+    </div>
+  </section>
+
+</main>
+
+<!-- DETAILS MODAL -->
+<div class="modal-overlay" id="detailsModal">
+  <div class="details-modal">
+
+    <button class="modal-close" id="modalClose">×</button>
+
+    <div class="modal-backdrop">
+      <img src="" alt="" id="modalBackdrop">
+      <div class="modal-backdrop-overlay"></div>
+    </div>
+
+    <div class="modal-content">
+      <div class="modal-poster">
+        <img src="" alt="" id="modalPoster">
+      </div>
+
+      <div class="modal-info">
+        <span class="media-type" id="modalType">MOVIE</span>
+
+        <h2 id="modalTitle">Movie Title</h2>
+
+        <div class="modal-meta">
+          <span>
+            <span class="star">★</span>
+            <span id="modalRating">0.0</span>
+          </span>
+          <span id="modalYear">----</span>
+          <span id="modalRuntime"></span>
+        </div>
+
+        <div class="modal-genres" id="modalGenres"></div>
+
+        <p class="modal-description" id="modalDescription">
+          Movie description will appear here.
+        </p>
+
+        <div class="modal-extra">
+          <div>
+            <span class="extra-label">Director / Creator</span>
+            <p id="modalDirector">Not available</p>
+          </div>
+
+          <div>
+            <span class="extra-label">Release Date</span>
+            <p id="modalReleaseDate">Not available</p>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button class="btn btn-primary" id="modalWatchlistBtn">
+            + Add to Watchlist
+          </button>
+
+          <button class="btn btn-outline" id="modalCompleteBtn">
+            Mark Completed
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<footer>
+  <div class="container footer-container">
+    <div>
+      <a href="#" class="logo footer-logo">
+        <img src="" alt="">
+        <span>CineVault</span>
+      </a>
+
+      <p>
+        Discover your next favourite. Keep track of every story.
+      </p>
+    </div>
+
+    <p class="copyright">
+      © 2026 CineVault
+    </p>
+  </div>
+</footer>
+
+<script src="script.js"></script>
 </body>
-
 </html>
